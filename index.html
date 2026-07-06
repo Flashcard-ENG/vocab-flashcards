@@ -1,0 +1,1098 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>คำศัพท์รายวัน — Vocab Flashcards</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+Thai:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#FAF6EF;
+    --surface:#FFFFFF;
+    --ink:#2E2A25;
+    --ink-soft:#6B655C;
+    --navy:#2C3654;
+    --coral:#C9535C;
+    --coral-soft:#F3DEDD;
+    --sage:#6E8F6B;
+    --sage-soft:#E2EBDF;
+    --amber:#C88A34;
+    --amber-soft:#F3E6D2;
+    --tab-bg:#EFE8D8;
+    --ring:#D8D1BE;
+    --radius:16px;
+    --shadow: 0 1px 2px rgba(46,42,37,0.06), 0 8px 24px rgba(46,42,37,0.08);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Inter','Noto Sans Thai',sans-serif;
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    padding:32px 16px 60px;
+  }
+  .page{
+    width:100%;
+    max-width:460px;
+  }
+  .masthead{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    margin-bottom:22px;
+    gap:12px;
+  }
+  .masthead h1{
+    font-family:'Fraunces','Noto Sans Thai',serif;
+    font-optical-sizing:auto;
+    font-weight:600;
+    font-size:26px;
+    margin:0;
+    color:var(--navy);
+    letter-spacing:-0.01em;
+  }
+  .masthead .eyebrow{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    display:block;
+    margin-bottom:4px;
+  }
+  .add-toggle{
+    border:1px solid var(--ring);
+    background:var(--surface);
+    color:var(--navy);
+    font-family:'Inter','Noto Sans Thai',sans-serif;
+    font-size:13px;
+    font-weight:600;
+    border-radius:999px;
+    padding:9px 16px;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .add-toggle:hover{background:var(--tab-bg);}
+
+  .add-panel{
+    display:none;
+    background:var(--surface);
+    border:1px solid var(--ring);
+    border-radius:var(--radius);
+    padding:18px;
+    margin-bottom:20px;
+    box-shadow:var(--shadow);
+  }
+  .add-panel.show{display:block;}
+  .add-panel-title{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    margin-bottom:12px;
+  }
+  .add-mode-row{
+    display:flex;
+    gap:6px;
+    margin-bottom:14px;
+  }
+  .mode-btn{
+    flex:1;
+    border:1px solid var(--ring);
+    background:var(--tab-bg);
+    color:var(--ink-soft);
+    font-family:'Inter','Noto Sans Thai',sans-serif;
+    font-size:12px;
+    font-weight:600;
+    border-radius:8px;
+    padding:7px 6px;
+    cursor:pointer;
+  }
+  .mode-btn.active{
+    background:var(--navy);
+    color:#fff;
+    border-color:var(--navy);
+  }
+  .field-label{
+    font-family:'Noto Sans Thai',sans-serif;
+    font-size:12px;
+    color:var(--ink-soft);
+    margin-bottom:4px;
+    display:block;
+  }
+  .field-row{margin-bottom:12px;}
+  .field-input, .field-select, .field-textarea{
+    width:100%;
+    font-family:'Inter','Noto Sans Thai',sans-serif;
+    font-size:14px;
+    color:var(--ink);
+    background:var(--bg);
+    border:1px solid var(--ring);
+    border-radius:10px;
+    padding:10px 12px;
+  }
+  .field-textarea{
+    min-height:120px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    resize:vertical;
+  }
+  .field-hint{
+    font-family:'Noto Sans Thai',sans-serif;
+    font-size:11px;
+    color:var(--ink-soft);
+    margin-top:4px;
+  }
+  .new-deck-row{display:none;margin-top:8px;}
+  .new-deck-row.show{display:block;}
+  .add-panel-actions{
+    display:flex;
+    gap:10px;
+    margin-top:6px;
+  }
+  .btn-add-submit{
+    flex:1;
+    border:none;
+    background:var(--navy);
+    color:#fff;
+    font-family:'Inter','Noto Sans Thai',sans-serif;
+    font-weight:600;
+    font-size:13px;
+    border-radius:10px;
+    padding:11px 10px;
+    cursor:pointer;
+  }
+  .btn-add-cancel{
+    border:1px solid var(--ring);
+    background:transparent;
+    color:var(--ink-soft);
+    font-family:'Inter','Noto Sans Thai',sans-serif;
+    font-size:13px;
+    border-radius:10px;
+    padding:11px 14px;
+    cursor:pointer;
+  }
+  .add-status{
+    font-family:'Noto Sans Thai',sans-serif;
+    font-size:12px;
+    color:var(--sage);
+    margin-top:10px;
+    min-height:16px;
+  }
+  .ocr-row{
+    margin-bottom:14px;
+  }
+  .ocr-btn{
+    width:100%;
+    border:1px dashed var(--ring);
+    background:var(--bg);
+    color:var(--navy);
+    font-family:'Inter','Noto Sans Thai',sans-serif;
+    font-size:13px;
+    font-weight:600;
+    border-radius:10px;
+    padding:12px 10px;
+    cursor:pointer;
+  }
+  .ocr-btn:hover{background:var(--tab-bg);}
+  .ocr-status{
+    font-family:'Noto Sans Thai',sans-serif;
+    font-size:12px;
+    color:var(--ink-soft);
+    margin-bottom:10px;
+    min-height:14px;
+  }
+  .ocr-preview{
+    display:none;
+    max-width:100%;
+    max-height:180px;
+    border-radius:10px;
+    margin-bottom:10px;
+    border:1px solid var(--ring);
+  }
+
+  .tabs{
+    display:flex;
+    gap:6px;
+    background:var(--tab-bg);
+    border-radius:999px;
+    padding:4px;
+    margin-bottom:20px;
+  }
+  .tab{
+    flex:1;
+    border:none;
+    background:transparent;
+    font-family:'Inter','Noto Sans Thai',sans-serif;
+    font-size:13px;
+    font-weight:500;
+    color:var(--ink-soft);
+    padding:8px 6px;
+    border-radius:999px;
+    cursor:pointer;
+    transition:background 0.15s ease, color 0.15s ease;
+  }
+  .tab.active{
+    background:var(--navy);
+    color:#fff;
+  }
+
+  .status-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:14px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    color:var(--ink-soft);
+  }
+  .progress-track{
+    flex:1;
+    height:4px;
+    background:var(--tab-bg);
+    border-radius:2px;
+    margin:0 12px;
+    overflow:hidden;
+  }
+  .progress-fill{
+    height:100%;
+    background:var(--navy);
+    border-radius:2px;
+    transition:width 0.2s ease;
+    width:0%;
+  }
+
+  .ring-row{
+    display:flex;
+    justify-content:center;
+    gap:22px;
+    margin-bottom:-14px;
+    position:relative;
+    z-index:2;
+  }
+  .ring-hole{
+    width:16px;
+    height:16px;
+    border-radius:50%;
+    background:var(--bg);
+    border:2px solid var(--ring);
+  }
+
+  .card-wrap{
+    perspective:1400px;
+    margin-bottom:22px;
+    position:relative;
+  }
+  .card{
+    position:relative;
+    width:100%;
+    min-height:250px;
+    cursor:pointer;
+    transform-style:preserve-3d;
+    transition:transform 0.45s cubic-bezier(.4,.2,.2,1);
+  }
+  .card.flipped{
+    transform:rotateY(180deg);
+  }
+  .face{
+    position:absolute;
+    inset:0;
+    backface-visibility:hidden;
+    background:var(--surface);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    border-top:6px solid var(--navy);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    padding:36px 28px;
+  }
+  .face-back{
+    transform:rotateY(180deg);
+    border-top:6px solid var(--coral);
+  }
+  .idx-tag{
+    position:absolute;
+    top:16px;
+    left:20px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    color:var(--ink-soft);
+  }
+  .deck-tag{
+    position:absolute;
+    top:14px;
+    right:18px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    background:var(--tab-bg);
+    color:var(--ink-soft);
+    padding:3px 10px;
+    border-radius:999px;
+  }
+  .en-word{
+    font-family:'Fraunces',serif;
+    font-optical-sizing:auto;
+    font-weight:700;
+    font-size:34px;
+    color:var(--navy);
+    line-height:1.15;
+    margin-bottom:14px;
+  }
+  .hint{
+    font-family:'Noto Sans Thai',sans-serif;
+    font-size:13px;
+    color:var(--ink-soft);
+  }
+  .th-word{
+    font-family:'Noto Sans Thai',sans-serif;
+    font-weight:600;
+    font-size:20px;
+    color:var(--coral);
+    line-height:1.6;
+  }
+  .pron{
+    font-family:'JetBrains Mono',monospace;
+    font-size:13px;
+    color:var(--ink-soft);
+    margin-bottom:10px;
+  }
+  .syn-line{
+    font-family:'Noto Sans Thai',sans-serif;
+    font-size:13px;
+    color:var(--ink-soft);
+    margin-top:12px;
+  }
+  .syn-line b{
+    color:var(--sage);
+    font-weight:600;
+  }
+
+  .review-summary{
+    margin-top:26px;
+    padding-top:18px;
+    border-top:1px solid var(--ring);
+  }
+  .review-summary-title{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    margin-bottom:10px;
+  }
+  .review-empty{
+    font-family:'Noto Sans Thai',sans-serif;
+    font-size:13px;
+    color:var(--ink-soft);
+  }
+  .review-item{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    gap:10px;
+    background:var(--surface);
+    border:1px solid var(--ring);
+    border-radius:10px;
+    padding:10px 12px;
+    margin-bottom:8px;
+  }
+  .review-item-left{
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+  }
+  .review-item-en{
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    font-size:15px;
+    color:var(--navy);
+  }
+  .review-item-th{
+    font-family:'Noto Sans Thai',sans-serif;
+    font-size:12px;
+    color:var(--ink-soft);
+  }
+  .review-item-count{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    color:var(--amber);
+    white-space:nowrap;
+    background:var(--amber-soft);
+    padding:3px 9px;
+    border-radius:999px;
+  }
+
+  .done-overlay{
+    position:absolute;
+    inset:0;
+    background:var(--surface);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    border-top:6px solid var(--sage);
+    display:none;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    padding:36px 28px;
+  }
+  .done-overlay.show{ display:flex; }
+  .done-title{
+    font-family:'Fraunces',serif;
+    font-weight:700;
+    font-size:24px;
+    color:var(--navy);
+    margin-bottom:8px;
+  }
+  .done-sub{
+    font-family:'Noto Sans Thai',sans-serif;
+    font-size:14px;
+    color:var(--ink-soft);
+    margin-bottom:20px;
+  }
+
+  .controls{
+    display:flex;
+    gap:10px;
+    margin-bottom:14px;
+  }
+  .btn{
+    flex:1;
+    font-family:'Inter','Noto Sans Thai',sans-serif;
+    font-size:14px;
+    font-weight:500;
+    color:var(--ink);
+    background:var(--surface);
+    border:1px solid var(--ring);
+    border-radius:12px;
+    padding:12px 10px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    transition:background 0.15s ease, transform 0.1s ease;
+  }
+  .btn:hover{background:var(--tab-bg);}
+  .btn:active{transform:scale(0.97);}
+  .btn-restart{
+    border:none;
+    background:var(--navy);
+    color:#fff;
+    font-family:'Inter','Noto Sans Thai',sans-serif;
+    font-weight:600;
+    font-size:14px;
+    border-radius:12px;
+    padding:12px 22px;
+    cursor:pointer;
+  }
+
+  .judge-row{
+    display:flex;
+    gap:10px;
+    margin-bottom:22px;
+  }
+  .btn-know{
+    flex:1;
+    border:none;
+    background:var(--sage-soft);
+    color:#3E5A3B;
+    font-family:'Inter','Noto Sans Thai',sans-serif;
+    font-weight:600;
+    font-size:14px;
+    border-radius:12px;
+    padding:13px 10px;
+    cursor:pointer;
+    transition:transform 0.1s ease, background 0.15s ease;
+  }
+  .btn-know:hover{background:#D3E4CE;}
+  .btn-review{
+    flex:1;
+    border:none;
+    background:var(--amber-soft);
+    color:#7A5620;
+    font-family:'Inter','Noto Sans Thai',sans-serif;
+    font-weight:600;
+    font-size:14px;
+    border-radius:12px;
+    padding:13px 10px;
+    cursor:pointer;
+    transition:transform 0.1s ease, background 0.15s ease;
+  }
+  .btn-review:hover{background:#EFD9AF;}
+  .btn-know:active, .btn-review:active{transform:scale(0.97);}
+
+  .tally{
+    display:flex;
+    justify-content:center;
+    gap:26px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    color:var(--ink-soft);
+  }
+  .tally span.dot-know{color:#3E5A3B;}
+  .tally span.dot-review{color:#7A5620;}
+
+  @media (max-width:380px){
+    .en-word{font-size:28px;}
+    .th-word{font-size:18px;}
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="masthead">
+    <div>
+      <span class="eyebrow">Daily practice</span>
+      <h1>คำศัพท์รายวัน</h1>
+    </div>
+    <button class="add-toggle" id="addToggleBtn">+ เพิ่มคำศัพท์</button>
+  </div>
+
+  <div class="add-panel" id="addPanel">
+    <div class="add-panel-title">เพิ่มคำศัพท์ใหม่</div>
+
+    <div class="ocr-row">
+      <button class="ocr-btn" id="ocrBtn" type="button">📷 ถ่ายรูป / อัปโหลดรูปตารางคำศัพท์</button>
+      <input type="file" id="ocrInput" accept="image/*" capture="environment" style="display:none;">
+    </div>
+    <img class="ocr-preview" id="ocrPreview" alt="รูปที่อัปโหลด">
+    <div class="ocr-status" id="ocrStatus"></div>
+
+    <div class="add-mode-row">
+      <button class="mode-btn active" id="modeSingleBtn" data-mode="single">กรอกทีละคำ</button>
+      <button class="mode-btn" id="modeBulkBtn" data-mode="bulk">วางหลายคำพร้อมกัน</button>
+    </div>
+
+    <div id="singleFields">
+      <div class="field-row">
+        <label class="field-label">คำศัพท์ (English)</label>
+        <input class="field-input" id="newEn" placeholder="เช่น evaluate">
+      </div>
+      <div class="field-row">
+        <label class="field-label">ความหมาย (ไทย)</label>
+        <input class="field-input" id="newTh" placeholder="เช่น ประเมิน">
+      </div>
+      <div class="field-row">
+        <label class="field-label">คำอ่าน (ไม่บังคับ)</label>
+        <input class="field-input" id="newPron" placeholder="เช่น อี-แวล-ลู-เอท">
+      </div>
+      <div class="field-row">
+        <label class="field-label">Synonym (ไม่บังคับ)</label>
+        <input class="field-input" id="newSyn" placeholder="เช่น assess, appraise">
+      </div>
+    </div>
+
+    <div id="bulkFields" style="display:none;">
+      <div class="field-row">
+        <label class="field-label">วางทีละบรรทัด รูปแบบ: english | ไทย | คำอ่าน | synonym</label>
+        <textarea class="field-textarea" id="newBulk" placeholder="evaluate | ประเมิน | อี-แวล-ลู-เอท | assess, appraise
+expansion | การขยายตัว | เอ็กซ์-แพน-ชั่น | growth, enlargement"></textarea>
+        <div class="field-hint">คำอ่านและ synonym เว้นได้ (ใส่แค่ english | ไทย ก็พอ)</div>
+      </div>
+    </div>
+
+    <div class="field-row">
+      <label class="field-label">เพิ่มลงชุดคำศัพท์ (Deck)</label>
+      <select class="field-select" id="deckSelect">
+        <option value="day1">Day 1</option>
+        <option value="day2">Day 2</option>
+        <option value="__new__">+ สร้าง Day ใหม่</option>
+      </select>
+      <div class="new-deck-row" id="newDeckRow">
+        <input class="field-input" id="newDeckName" placeholder="เช่น Day 3">
+      </div>
+    </div>
+
+    <div class="add-panel-actions">
+      <button class="btn-add-submit" id="submitAddBtn">เพิ่มคำนี้</button>
+      <button class="btn-add-cancel" id="cancelAddBtn">ปิด</button>
+    </div>
+    <div class="add-status" id="addStatus"></div>
+  </div>
+
+  <div class="tabs" id="tabs">
+    <button class="tab active" data-deck="all">ทั้งหมด</button>
+    <button class="tab" data-deck="day1">Day 1</button>
+    <button class="tab" data-deck="day2">Day 2</button>
+  </div>
+
+  <div class="status-row">
+    <span id="counter">เหลือ 36 คำ</span>
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+    <span id="deckLabel">all</span>
+  </div>
+
+  <div class="ring-row">
+    <div class="ring-hole"></div>
+    <div class="ring-hole"></div>
+    <div class="ring-hole"></div>
+  </div>
+
+  <div class="card-wrap">
+    <div class="card" id="card">
+      <div class="face face-front">
+        <span class="idx-tag" id="idxTagFront">#01</span>
+        <span class="deck-tag" id="deckTagFront">day1</span>
+        <div class="en-word" id="enWord"></div>
+        <div class="pron" id="pronFront"></div>
+        <div class="hint">แตะเพื่อดูคำแปล</div>
+      </div>
+      <div class="face face-back">
+        <span class="idx-tag" id="idxTagBack">#01</span>
+        <span class="deck-tag" id="deckTagBack">day1</span>
+        <div class="th-word" id="thWord"></div>
+        <div class="syn-line" id="synLine"></div>
+      </div>
+    </div>
+    <div class="done-overlay" id="doneOverlay">
+      <div class="done-title">ครบรอบแล้ว 🎉</div>
+      <div class="done-sub" id="doneSub">จำได้ทุกคำในรอบนี้</div>
+      <button class="btn-restart" id="restartBtn">เริ่มรอบใหม่</button>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button class="btn" id="shuffleBtn">↻ สุ่มลำดับที่เหลือ</button>
+  </div>
+
+  <div class="judge-row">
+    <button class="btn-know" id="knowBtn">✓ จำได้แล้ว</button>
+    <button class="btn-review" id="reviewBtn">↻ ต้องทบทวน</button>
+  </div>
+
+  <div class="tally">
+    <span><span class="dot-know">●</span> จำได้แล้ว: <span id="knowCount">0</span></span>
+    <span><span class="dot-review">●</span> รอทบทวน: <span id="reviewCount">0</span></span>
+  </div>
+
+  <div class="review-summary">
+    <div class="review-summary-title">คำที่กดทบทวนบ่อยๆ</div>
+    <div id="reviewSummaryList"></div>
+  </div>
+
+</div>
+
+<script>
+const day1 = [
+  {en:"abide by", th:"ยอมปฏิบัติตาม", pron:"อะไบด์-บาย", syn:"comply with, follow, obey"},
+  {en:"aim", th:"ตั้งเป้า", pron:"เอม", syn:"goal, target, intend"},
+  {en:"assurance", th:"การรับประกัน / ความเชื่อมั่น", pron:"อะชัวร์-เรินซ์", syn:"guarantee, confidence, promise"},
+  {en:"advance", th:"คืบหน้า / ก้าวหน้า / พัฒนา", pron:"แอด-แวนซ์", syn:"progress, proceed, improve"},
+  {en:"accommodate", th:"ให้ความช่วยเหลือ / จัดให้เหมาะสม", pron:"อะคอม-โมเดท", syn:"adapt, adjust, house"},
+  {en:"breakthrough", th:"การพัฒนา / การค้นพบที่ยิ่งใหญ่", pron:"เบรค-ธรู", syn:"discovery, advance, innovation"},
+  {en:"client", th:"ลูกค้า / ผู้ซื้อ", pron:"ไคล-เอินท์", syn:"customer, patron"},
+  {en:"consequence", th:"ผลลัพธ์ / ผลที่ตามมา", pron:"คอน-ซิ-เควินซ์", syn:"result, outcome, effect"},
+  {en:"commercial", th:"การโฆษณาทางทีวี / วิทยุ", pron:"คอม-เมอร์-เชิล", syn:"advertisement, ad"},
+  {en:"consider", th:"พิจารณา", pron:"คอน-ซิด-เดอร์", syn:"contemplate, think about, ponder"},
+  {en:"advantageous", th:"มีประโยชน์ / ให้คุณ", pron:"แอด-แวน-เท-เจียส", syn:"beneficial, favorable, helpful"},
+  {en:"association", th:"สมาคม / องค์กร", pron:"อะโซ-ซิ-เอ-ชั่น", syn:"organization, society, group"},
+  {en:"calculate", th:"คำนวณ / คาดการณ์", pron:"แคล-คิว-เลท", syn:"compute, estimate, figure"},
+  {en:"approve", th:"อนุมัติ", pron:"อะพรูฟ", syn:"authorize, sanction, endorse"},
+  {en:"attract", th:"ดึงดูด / ทำให้สนใจ", pron:"อะแทร็คท์", syn:"draw, allure, entice"},
+  {en:"additional", th:"ที่เพิ่มเติม / ส่วนที่เพิ่มเข้ามา", pron:"อะดิช-เชิน-แนล", syn:"extra, supplementary, further"},
+  {en:"apparently", th:"อย่างเห็นได้ชัด", pron:"อะแพ-เริ่นท์-ลี่", syn:"evidently, seemingly, clearly"},
+  {en:"charity", th:"การกุศล", pron:"แชร์-ริ-ตี้", syn:"benevolence, philanthropy, donation"}
+].map(c=>({...c, deck:"day1"}));
+
+const day2 = [
+  {en:"consult", th:"ปรึกษา, ดูข้อมูล", pron:"คอน-ซัลท์", syn:"ask advice from, refer to"},
+  {en:"consume", th:"บริโภค, ใช้หมดไป, สูญสิ้นไป", pron:"คอน-ซูม", syn:"use up, ingest, deplete"},
+  {en:"consumer", th:"ผู้บริโภค", pron:"คอน-ซู-เมอร์", syn:"buyer, customer, user"},
+  {en:"consumption", th:"การบริโภค, การใช้", pron:"คอน-ซัมพ์-ชั่น", syn:"usage, intake"},
+  {en:"convince", th:"โน้มน้าว", pron:"คอน-วินซ์", syn:"persuade, assure"},
+  {en:"current", th:"ปัจจุบัน, ณ เวลานี้", pron:"เคอ-เริ่นท์", syn:"present, ongoing, prevailing"},
+  {en:"declare", th:"ประกาศ, แถลง, แจ้ง", pron:"ดิ-แคลร์", syn:"announce, proclaim, state"},
+  {en:"determine", th:"ตัดสินใจ, กำหนด, ระบุ", pron:"ดิ-เทอร์-มิน", syn:"decide, ascertain, establish"},
+  {en:"downturn", th:"ขาลง, แนวโน้มที่แย่ลง", pron:"ดาวน์-เทิร์น", syn:"decline, slump, recession"},
+  {en:"establish", th:"จัดตั้ง, ตั้งตัว", pron:"เอส-แทบ-ลิช", syn:"found, set up, institute"},
+  {en:"evaluate", th:"ประเมิน", pron:"อี-แวล-ลู-เอท", syn:"assess, appraise, gauge"},
+  {en:"expansion", th:"การขยายตัว", pron:"เอ็กซ์-แพน-ชั่น", syn:"growth, enlargement, extension"},
+  {en:"explore", th:"สำรวจ, เลือกดู", pron:"เอ็กซ์-พลอร์", syn:"investigate, examine, survey"},
+  {en:"extensively", th:"อย่างกว้างขวาง", pron:"เอ็กซ์-เทน-ซิฟ-ลี่", syn:"widely, thoroughly, broadly"},
+  {en:"fallible", th:"ที่ผิดพลาดได้", pron:"แฟล-ลิ-เบิล", syn:"imperfect, error-prone"},
+  {en:"feasibility", th:"ความเป็นไปได้", pron:"ฟี-สิ-บิล-ลิ-ตี้", syn:"viability, practicability"},
+  {en:"gather", th:"รวบรวม", pron:"แกธ-เธอร์", syn:"collect, assemble, accumulate"},
+  {en:"grocery", th:"ร้านขายของชำ, ของอุปโภคบริโภค", pron:"โกร-เซอ-รี่", syn:"provisions, food store"}
+].map(c=>({...c, deck:"day2"}));
+
+const decks = { day1: day1, day2: day2 };
+const deckLabels = { day1: "Day 1", day2: "Day 2" };
+
+function getAllCards(){
+  return Object.keys(decks).reduce((acc, k) => acc.concat(decks[k]), []);
+}
+
+let currentDeckKey = "all";
+let deck = getAllCards();
+let queue = [];
+let totalInRound = 0;
+let knownThisRound = 0;
+let reviewSet = new Set();
+let flipped = false;
+
+const cardEl = document.getElementById('card');
+const enWordEl = document.getElementById('enWord');
+const thWordEl = document.getElementById('thWord');
+const pronFrontEl = document.getElementById('pronFront');
+const synLineEl = document.getElementById('synLine');
+const idxTagFront = document.getElementById('idxTagFront');
+const idxTagBack = document.getElementById('idxTagBack');
+const deckTagFront = document.getElementById('deckTagFront');
+const deckTagBack = document.getElementById('deckTagBack');
+const counterEl = document.getElementById('counter');
+const deckLabelEl = document.getElementById('deckLabel');
+const progressFill = document.getElementById('progressFill');
+const knowCountEl = document.getElementById('knowCount');
+const reviewCountEl = document.getElementById('reviewCount');
+const doneOverlay = document.getElementById('doneOverlay');
+const doneSub = document.getElementById('doneSub');
+const reviewSummaryListEl = document.getElementById('reviewSummaryList');
+
+function cardKey(c){ return c.deck + ':' + c.en; }
+
+// นับจำนวนครั้งที่กด "ต้องทบทวน" สะสมตลอดการใช้งาน (ไม่รีเซ็ตเมื่อเริ่มรอบใหม่)
+const reviewFreq = new Map();
+
+function findCardByKey(key){
+  return getAllCards().find(c => cardKey(c) === key);
+}
+
+function renderReviewSummary(){
+  const entries = Array.from(reviewFreq.entries())
+    .filter(([, count]) => count >= 2)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 10);
+
+  if(entries.length === 0){
+    reviewSummaryListEl.innerHTML = '<div class="review-empty">ยังไม่มีคำที่กดทบทวนซ้ำหลายครั้ง</div>';
+    return;
+  }
+
+  reviewSummaryListEl.innerHTML = entries.map(([key, count]) => {
+    const c = findCardByKey(key);
+    if(!c) return '';
+    return '<div class="review-item">' +
+      '<div class="review-item-left">' +
+        '<span class="review-item-en">' + c.en + '</span>' +
+        '<span class="review-item-th">' + c.th + '</span>' +
+      '</div>' +
+      '<span class="review-item-count">ทบทวน ' + count + ' ครั้ง</span>' +
+    '</div>';
+  }).join('');
+}
+
+function shuffleArray(arr){
+  for(let i=arr.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [arr[i],arr[j]]=[arr[j],arr[i]];
+  }
+  return arr;
+}
+
+function startRound(){
+  queue = shuffleArray(deck.slice());
+  totalInRound = queue.length;
+  knownThisRound = 0;
+  reviewSet.clear();
+  flipped = false;
+  doneOverlay.classList.remove('show');
+  render();
+}
+
+function render(){
+  knowCountEl.textContent = knownThisRound;
+  reviewCountEl.textContent = reviewSet.size;
+  deckLabelEl.textContent = currentDeckKey;
+
+  if(queue.length === 0){
+    counterEl.textContent = 'เหลือ 0 คำ';
+    progressFill.style.width = '100%';
+    doneSub.textContent = 'จำได้ ' + knownThisRound + ' จาก ' + totalInRound + ' คำในรอบนี้';
+    doneOverlay.classList.add('show');
+    return;
+  }
+  doneOverlay.classList.remove('show');
+
+  const c = queue[0];
+  enWordEl.textContent = c.en;
+  thWordEl.textContent = c.th;
+  pronFrontEl.textContent = '/' + c.pron + '/';
+  synLineEl.innerHTML = '<b>Synonym:</b> ' + c.syn;
+  const posInDeck = deck.findIndex(d => cardKey(d) === cardKey(c)) + 1;
+  const tag = '#' + String(posInDeck).padStart(2,'0');
+  idxTagFront.textContent = tag;
+  idxTagBack.textContent = tag;
+  deckTagFront.textContent = c.deck;
+  deckTagBack.textContent = c.deck;
+  cardEl.classList.toggle('flipped', flipped);
+  counterEl.textContent = 'เหลือ ' + queue.length + ' คำ';
+  progressFill.style.width = (((totalInRound - queue.length)/totalInRound)*100) + '%';
+}
+
+cardEl.addEventListener('click', ()=>{
+  if(queue.length === 0) return;
+  flipped = !flipped;
+  render();
+});
+
+document.getElementById('shuffleBtn').addEventListener('click', ()=>{
+  if(queue.length <= 1) return;
+  const rest = shuffleArray(queue.slice(1));
+  queue = [queue[0]].concat(rest);
+  render();
+});
+
+document.getElementById('knowBtn').addEventListener('click', ()=>{
+  if(queue.length === 0) return;
+  const c = queue.shift();
+  reviewSet.delete(cardKey(c));
+  knownThisRound += 1;
+  flipped = false;
+  render();
+});
+
+document.getElementById('reviewBtn').addEventListener('click', ()=>{
+  if(queue.length === 0) return;
+  const c = queue.shift();
+  reviewSet.add(cardKey(c));
+  const key = cardKey(c);
+  reviewFreq.set(key, (reviewFreq.get(key) || 0) + 1);
+  queue.push(c);
+  flipped = false;
+  render();
+  renderReviewSummary();
+});
+
+document.getElementById('restartBtn').addEventListener('click', startRound);
+
+function selectDeck(key){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.deck === key));
+  currentDeckKey = key;
+  deck = key === 'all' ? getAllCards() : decks[key];
+  startRound();
+}
+
+document.getElementById('tabs').addEventListener('click', (e)=>{
+  const btn = e.target.closest('.tab');
+  if(!btn) return;
+  selectDeck(btn.dataset.deck);
+});
+
+function addTabForDeck(key, label){
+  const tabsEl = document.getElementById('tabs');
+  const btn = document.createElement('button');
+  btn.className = 'tab';
+  btn.dataset.deck = key;
+  btn.textContent = label;
+  tabsEl.appendChild(btn);
+}
+
+function addDeckOption(key, label){
+  const select = document.getElementById('deckSelect');
+  const opt = document.createElement('option');
+  opt.value = key;
+  opt.textContent = label;
+  select.insertBefore(opt, select.querySelector('option[value="__new__"]'));
+}
+
+// ---------- ฟอร์มเพิ่มคำศัพท์ ----------
+const addToggleBtn = document.getElementById('addToggleBtn');
+const addPanel = document.getElementById('addPanel');
+const modeSingleBtn = document.getElementById('modeSingleBtn');
+const modeBulkBtn = document.getElementById('modeBulkBtn');
+const singleFields = document.getElementById('singleFields');
+const bulkFields = document.getElementById('bulkFields');
+const deckSelect = document.getElementById('deckSelect');
+const newDeckRow = document.getElementById('newDeckRow');
+const newDeckName = document.getElementById('newDeckName');
+const addStatus = document.getElementById('addStatus');
+let addMode = 'single';
+
+addToggleBtn.addEventListener('click', ()=>{
+  addPanel.classList.toggle('show');
+  addStatus.textContent = '';
+});
+document.getElementById('cancelAddBtn').addEventListener('click', ()=>{
+  addPanel.classList.remove('show');
+});
+
+modeSingleBtn.addEventListener('click', ()=>{
+  addMode = 'single';
+  modeSingleBtn.classList.add('active');
+  modeBulkBtn.classList.remove('active');
+  singleFields.style.display = 'block';
+  bulkFields.style.display = 'none';
+});
+modeBulkBtn.addEventListener('click', ()=>{
+  addMode = 'bulk';
+  modeBulkBtn.classList.add('active');
+  modeSingleBtn.classList.remove('active');
+  singleFields.style.display = 'none';
+  bulkFields.style.display = 'block';
+});
+
+// ---------- ถ่ายรูป / อัปโหลดรูป แล้วอ่านข้อความอัตโนมัติ (OCR) ----------
+const ocrBtn = document.getElementById('ocrBtn');
+const ocrInput = document.getElementById('ocrInput');
+const ocrStatus = document.getElementById('ocrStatus');
+const ocrPreview = document.getElementById('ocrPreview');
+
+function loadTesseract(){
+  return new Promise((resolve, reject)=>{
+    if(window.Tesseract){ resolve(); return; }
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error('โหลดตัวอ่านข้อความไม่สำเร็จ ตรวจสอบอินเทอร์เน็ต'));
+    document.head.appendChild(script);
+  });
+}
+
+// แปลงข้อความดิบจาก OCR ให้เป็นรูปแบบ "english | ไทย" แบบเดา best-effort
+// (แต่ละบรรทัดในตารางมักเป็น: เลขลำดับ  english  ความหมายไทย  [ช่องติ๊ก])
+function guessBulkLines(rawText){
+  const lines = rawText.split('\n').map(l => l.trim()).filter(Boolean);
+  const out = [];
+  lines.forEach(line => {
+    const cleaned = line.replace(/^\d+[\.\)]?\s*/, '');
+    const m = cleaned.match(/^([a-zA-Z][a-zA-Z '\-]*)\s+([ก-๙].*)$/);
+    if(m){
+      const en = m[1].trim();
+      const th = m[2].replace(/[^ก-๙0-9a-zA-Z,\/\.\s]+$/g, '').trim();
+      if(en && th) out.push(en + ' | ' + th);
+    }
+  });
+  return out.join('\n');
+}
+
+ocrBtn.addEventListener('click', () => ocrInput.click());
+
+ocrInput.addEventListener('change', async () => {
+  const file = ocrInput.files[0];
+  if(!file) return;
+
+  ocrPreview.src = URL.createObjectURL(file);
+  ocrPreview.style.display = 'block';
+  ocrStatus.textContent = 'กำลังโหลดตัวอ่านข้อความ...';
+
+  try{
+    await loadTesseract();
+    ocrStatus.textContent = 'กำลังอ่านข้อความจากรูป (อาจใช้เวลาสักครู่)...';
+    const result = await Tesseract.recognize(file, 'eng+tha');
+    const guessed = guessBulkLines(result.data.text);
+
+    modeBulkBtn.click();
+    document.getElementById('newBulk').value = guessed || result.data.text;
+    ocrStatus.textContent = guessed
+      ? 'อ่านเสร็จแล้ว — กรุณาตรวจสอบและแก้ไขให้ถูกต้องก่อนกดเพิ่ม (OCR อาจอ่านคำไทยผิดบางจุด)'
+      : 'อ่านได้ แต่จัดรูปแบบอัตโนมัติไม่สำเร็จ กรุณาแก้ไขข้อความในกล่องด้านล่างเป็น english | ไทย เอง';
+  }catch(err){
+    ocrStatus.textContent = 'อ่านรูปไม่สำเร็จ: ' + err.message;
+  }
+});
+
+deckSelect.addEventListener('change', ()=>{
+  newDeckRow.classList.toggle('show', deckSelect.value === '__new__');
+});
+
+function slugifyDeckName(label){
+  const trimmed = label.trim();
+  const digits = trimmed.match(/\d+/);
+  if(digits) return 'day' + digits[0];
+  return 'deck_' + trimmed.toLowerCase().replace(/[^a-z0-9ก-๙]+/g, '_').replace(/^_+|_+$/g, '') || ('deck_' + Date.now());
+}
+
+function resolveTargetDeck(){
+  if(deckSelect.value !== '__new__'){
+    return { key: deckSelect.value, label: deckLabels[deckSelect.value] || deckSelect.value, isNew:false };
+  }
+  const label = newDeckName.value.trim();
+  if(!label) return null;
+  const key = slugifyDeckName(label);
+  return { key, label, isNew: !decks[key] };
+}
+
+function ensureDeckExists(key, label){
+  if(!decks[key]){
+    decks[key] = [];
+    deckLabels[key] = label;
+    addTabForDeck(key, label);
+    addDeckOption(key, label);
+  }
+}
+
+function addSingleCard(en, th, pron, syn, targetKey, targetLabel){
+  ensureDeckExists(targetKey, targetLabel);
+  decks[targetKey].push({ en: en.trim(), th: th.trim(), pron: (pron||'').trim() || '-', syn: (syn||'').trim() || '-', deck: targetKey });
+}
+
+document.getElementById('submitAddBtn').addEventListener('click', ()=>{
+  const target = resolveTargetDeck();
+  if(!target){
+    addStatus.textContent = 'กรุณาระบุชื่อ Day ใหม่';
+    addStatus.style.color = '#C9535C';
+    return;
+  }
+
+  let addedCount = 0;
+
+  if(addMode === 'single'){
+    const en = document.getElementById('newEn').value;
+    const th = document.getElementById('newTh').value;
+    if(!en.trim() || !th.trim()){
+      addStatus.textContent = 'กรุณากรอกคำศัพท์และความหมายอย่างน้อย';
+      addStatus.style.color = '#C9535C';
+      return;
+    }
+    addSingleCard(en, th, document.getElementById('newPron').value, document.getElementById('newSyn').value, target.key, target.label);
+    addedCount = 1;
+    document.getElementById('newEn').value = '';
+    document.getElementById('newTh').value = '';
+    document.getElementById('newPron').value = '';
+    document.getElementById('newSyn').value = '';
+  } else {
+    const lines = document.getElementById('newBulk').value.split('\n').map(l=>l.trim()).filter(Boolean);
+    lines.forEach(line => {
+      const parts = line.split('|').map(p=>p.trim());
+      if(parts.length >= 2 && parts[0] && parts[1]){
+        addSingleCard(parts[0], parts[1], parts[2], parts[3], target.key, target.label);
+        addedCount += 1;
+      }
+    });
+    if(addedCount === 0){
+      addStatus.textContent = 'ไม่พบบรรทัดที่ถูกต้อง (ต้องมีอย่างน้อย english | ไทย)';
+      addStatus.style.color = '#C9535C';
+      return;
+    }
+    document.getElementById('newBulk').value = '';
+  }
+
+  newDeckName.value = '';
+  newDeckRow.classList.remove('show');
+  deckSelect.value = target.key;
+
+  addStatus.style.color = '#6E8F6B';
+  addStatus.textContent = 'เพิ่มแล้ว ' + addedCount + ' คำ ลงใน ' + target.label;
+
+  // รีเฟรชรอบปัจจุบันถ้ากำลังดูอยู่ที่ deck นี้หรือ "ทั้งหมด"
+  if(currentDeckKey === 'all' || currentDeckKey === target.key){
+    selectDeck(currentDeckKey);
+  }
+});
+
+startRound();
+renderReviewSummary();
+</script>
+</body>
+</html>
