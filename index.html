@@ -686,7 +686,29 @@ expansion | การขยายตัว | เอ็กซ์-แพน-ชั
 
 </div>
 
-<script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
+import { getDatabase, ref, set, get, onValue } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDjI15z3HTBzJKRFH_gEmQaFr3KtbWkhYA",
+  authDomain: "vocab-flashcards-12472.firebaseapp.com",
+  databaseURL: "https://vocab-flashcards-12472-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "vocab-flashcards-12472",
+  storageBucket: "vocab-flashcards-12472.firebasestorage.app",
+  messagingSenderId: "927850928142",
+  appId: "1:927850928142:web:6c5f226c158d11feef845f"
+};
+
+let dbRef = null;
+try{
+  const firebaseApp = initializeApp(firebaseConfig);
+  const db = getDatabase(firebaseApp);
+  dbRef = ref(db, 'vocabFlashcardsState');
+}catch(e){
+  console.warn('เชื่อมต่อ Firebase ไม่สำเร็จ จะใช้ localStorage (เฉพาะเครื่องนี้) แทน:', e);
+  dbRef = null;
+}
 const day1 = [
   {en:"abide by", th:"ยอมปฏิบัติตาม", pron:"อะไบด์-บาย", syn:"comply with, follow, obey"},
   {en:"aim", th:"ตั้งเป้า", pron:"เอม", syn:"goal, target, intend"},
@@ -735,65 +757,86 @@ const deckLabels = { day1: "Day 1", day2: "Day 2" };
 // นับจำนวนครั้งที่กด "ต้องทบทวน" สะสมตลอดการใช้งาน (ไม่รีเซ็ตเมื่อเริ่มรอบใหม่)
 const reviewFreq = new Map();
 
-// ---------- บันทึกข้อมูล ----------
-// ถ้าเปิดไฟล์นี้ผ่าน Claude (ในหน้าแชท) จะมี window.storage ให้ใช้ ซึ่งเป็น "ข้อมูลกลาง"
-// ที่ทุกคนที่เปิดไฟล์นี้ผ่าน Claude เห็นชุดเดียวกัน (sync ข้ามอุปกรณ์/คนได้)
-// ถ้าเปิดเป็นไฟล์ธรรมดาในเบราว์เซอร์ (ดับเบิลคลิกไฟล์เอง) จะไม่มี window.storage
-// ระบบจะสำรองไปใช้ localStorage แทน (บันทึกเฉพาะในเบราว์เซอร์เครื่องนั้นเครื่องเดียว)
-const STORAGE_KEY = 'vocabFlashcards_v1';
-const hasCloudStorage = (typeof window !== 'undefined' && !!window.storage);
-let syncMode = hasCloudStorage ? 'cloud' : 'local';
+// ---------- บันทึกข้อมูล (Firebase Realtime Database = ข้อมูลกลาง, ทุกคนเห็นชุดเดียวกัน) ----------
+const STORAGE_KEY = 'vocabFlashcards_v1'; // ใช้เป็น fallback key สำหรับ localStorage เท่านั้น
 
 function buildStatePayload(){
-  return JSON.stringify({
+  return {
     decks: decks,
     deckLabels: deckLabels,
     reviewFreq: Array.from(reviewFreq.entries())
-  });
+  };
 }
 
-function applyLoadedState(raw){
-  try{
-    const data = JSON.parse(raw);
-    if(data.decks) Object.assign(decks, data.decks);
-    if(data.deckLabels) Object.assign(deckLabels, data.deckLabels);
-    if(Array.isArray(data.reviewFreq)){
-      data.reviewFreq.forEach(([k,v]) => reviewFreq.set(k, v));
-    }
-  }catch(e){
-    console.warn('อ่านข้อมูลที่บันทึกไว้ไม่สำเร็จ:', e);
+function applyLoadedState(data){
+  if(!data) return;
+  if(data.decks) Object.assign(decks, data.decks);
+  if(data.deckLabels) Object.assign(deckLabels, data.deckLabels);
+  if(Array.isArray(data.reviewFreq)){
+    data.reviewFreq.forEach(pair => {
+      if(Array.isArray(pair)) reviewFreq.set(pair[0], pair[1]);
+    });
   }
 }
 
 async function saveState(){
   const payload = buildStatePayload();
-  if(hasCloudStorage){
+  if(dbRef){
     try{
-      const result = await window.storage.set(STORAGE_KEY, payload, true);
-      if(result){ return; }
+      await set(dbRef, payload);
+      return;
     }catch(e){
-      console.warn('บันทึกข้อมูลกลางไม่สำเร็จ ใช้ localStorage แทน:', e);
+      console.warn('บันทึกขึ้น Firebase ไม่สำเร็จ ใช้ localStorage แทน:', e);
     }
   }
-  try{ localStorage.setItem(STORAGE_KEY, payload); }catch(e){ console.warn('บันทึกข้อมูลไม่สำเร็จ:', e); }
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(payload)); }catch(e){ console.warn('บันทึกข้อมูลไม่สำเร็จ:', e); }
 }
 
 async function loadState(){
-  if(hasCloudStorage){
+  if(dbRef){
     try{
-      const result = await window.storage.get(STORAGE_KEY, true);
-      if(result && result.value){
-        applyLoadedState(result.value);
+      const snapshot = await get(dbRef);
+      if(snapshot.exists()){
+        applyLoadedState(snapshot.val());
         return;
       }
     }catch(e){
-      // ยังไม่เคยมีข้อมูล หรือเรียกไม่สำเร็จ ลองใช้ localStorage แทน
+      console.warn('โหลดข้อมูลจาก Firebase ไม่สำเร็จ ลองใช้ localStorage แทน:', e);
     }
   }
   try{
     const raw = localStorage.getItem(STORAGE_KEY);
-    if(raw) applyLoadedState(raw);
+    if(raw) applyLoadedState(JSON.parse(raw));
   }catch(e){}
+}
+
+let realtimeAttached = false;
+function attachRealtimeSync(){
+  if(!dbRef || realtimeAttached) return;
+  realtimeAttached = true;
+  onValue(dbRef, (snapshot) => {
+    const data = snapshot.val();
+    if(!data) return;
+
+    Object.keys(decks).forEach(k => delete decks[k]);
+    Object.keys(deckLabels).forEach(k => delete deckLabels[k]);
+    reviewFreq.clear();
+    applyLoadedState(data);
+
+    // เติมแท็บ/ตัวเลือก deck ที่อาจเพิ่งถูกสร้างจากเครื่องอื่น
+    Object.keys(decks).forEach(key => {
+      if(!document.querySelector('.tab[data-deck="'+key+'"]')){
+        addTabForDeck(key, deckLabels[key] || key);
+      }
+      if(!document.querySelector('#deckSelect option[value="'+key+'"]')){
+        addDeckOption(key, deckLabels[key] || key);
+      }
+    });
+
+    deck = currentDeckKey === 'all' ? getAllCards() : (decks[currentDeckKey] || getAllCards());
+    startRound();
+    renderReviewSummary();
+  });
 }
 
 function getAllCards(){
@@ -1160,8 +1203,8 @@ document.getElementById('submitAddBtn').addEventListener('click', async ()=>{
 
 document.getElementById('resetDataBtn').addEventListener('click', async ()=>{
   if(confirm('ล้างคำศัพท์ทั้งหมดที่คุณเพิ่มเอง (รวมสถิติทบทวน) และกลับไปเป็นชุดคำศัพท์เริ่มต้น?')){
-    if(hasCloudStorage){
-      try{ await window.storage.delete(STORAGE_KEY, true); }catch(e){}
+    if(dbRef){
+      try{ await set(dbRef, null); }catch(e){}
     }
     try{ localStorage.removeItem(STORAGE_KEY); }catch(e){}
     location.reload();
@@ -1183,13 +1226,15 @@ document.getElementById('resetDataBtn').addEventListener('click', async ()=>{
   deck = getAllCards();
 
   if(syncNoteEl){
-    syncNoteEl.textContent = hasCloudStorage
-      ? 'ข้อมูลนี้ซิงก์กลาง — ทุกคนที่เปิดไฟล์นี้ผ่าน Claude เห็นชุดเดียวกัน'
-      : 'เปิดเป็นไฟล์แยก: บันทึกเฉพาะเบราว์เซอร์เครื่องนี้เท่านั้น';
+    syncNoteEl.textContent = dbRef
+      ? 'เชื่อมต่อฐานข้อมูลกลางแล้ว — ทุกคนที่เปิดเว็บนี้เห็นคำศัพท์ชุดเดียวกันแบบเรียลไทม์'
+      : 'ไม่สามารถเชื่อมฐานข้อมูลกลางได้ตอนนี้ บันทึกเฉพาะเบราว์เซอร์เครื่องนี้เท่านั้น';
   }
 
   startRound();
   renderReviewSummary();
+
+  attachRealtimeSync();
 })();
 </script>
 </body>
