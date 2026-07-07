@@ -619,6 +619,7 @@ expansion | การขยายตัว | เอ็กซ์-แพน-ชั
       <button class="btn-add-cancel" id="cancelAddBtn">ปิด</button>
     </div>
     <div class="add-status" id="addStatus"></div>
+    <button type="button" id="resetDataBtn" style="margin-top:10px;background:none;border:none;color:var(--ink-soft);font-size:11px;text-decoration:underline;cursor:pointer;padding:0;">ล้างคำศัพท์ที่เพิ่มเองทั้งหมด</button>
   </div>
 
   <div class="tabs" id="tabs">
@@ -729,9 +730,56 @@ const day2 = [
 const decks = { day1: day1, day2: day2 };
 const deckLabels = { day1: "Day 1", day2: "Day 2" };
 
+// นับจำนวนครั้งที่กด "ต้องทบทวน" สะสมตลอดการใช้งาน (ไม่รีเซ็ตเมื่อเริ่มรอบใหม่)
+const reviewFreq = new Map();
+
+// ---------- บันทึกข้อมูลไว้ในเบราว์เซอร์ (localStorage) กันหายตอนรีเฟรช ----------
+const STORAGE_KEY = 'vocabFlashcards_v1';
+
+function saveState(){
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      decks: decks,
+      deckLabels: deckLabels,
+      reviewFreq: Array.from(reviewFreq.entries())
+    }));
+  }catch(e){
+    console.warn('บันทึกข้อมูลไม่สำเร็จ:', e);
+  }
+}
+
+function loadState(){
+  let raw;
+  try{
+    raw = localStorage.getItem(STORAGE_KEY);
+  }catch(e){
+    return;
+  }
+  if(!raw) return;
+  try{
+    const data = JSON.parse(raw);
+    if(data.decks) Object.assign(decks, data.decks);
+    if(data.deckLabels) Object.assign(deckLabels, data.deckLabels);
+    if(Array.isArray(data.reviewFreq)){
+      data.reviewFreq.forEach(([k,v]) => reviewFreq.set(k, v));
+    }
+  }catch(e){
+    console.warn('อ่านข้อมูลที่บันทึกไว้ไม่สำเร็จ:', e);
+  }
+}
+
 function getAllCards(){
   return Object.keys(decks).reduce((acc, k) => acc.concat(decks[k]), []);
 }
+
+loadState();
+
+// สร้างแท็บและตัวเลือก deck ให้ deck เพิ่มเติมที่โหลดมาจากข้อมูลที่บันทึกไว้ (เช่น Day 3 ที่เคยเพิ่มไว้)
+Object.keys(decks).forEach(key => {
+  if(key === 'day1' || key === 'day2') return;
+  addTabForDeck(key, deckLabels[key] || key);
+  addDeckOption(key, deckLabels[key] || key);
+});
 
 let currentDeckKey = "all";
 let deck = getAllCards();
@@ -760,9 +808,6 @@ const doneSub = document.getElementById('doneSub');
 const reviewSummaryListEl = document.getElementById('reviewSummaryList');
 
 function cardKey(c){ return c.deck + ':' + c.en; }
-
-// นับจำนวนครั้งที่กด "ต้องทบทวน" สะสมตลอดการใช้งาน (ไม่รีเซ็ตเมื่อเริ่มรอบใหม่)
-const reviewFreq = new Map();
 
 function findCardByKey(key){
   return getAllCards().find(c => cardKey(c) === key);
@@ -872,6 +917,7 @@ document.getElementById('reviewBtn').addEventListener('click', ()=>{
   flipped = false;
   render();
   renderReviewSummary();
+  saveState();
 });
 
 document.getElementById('restartBtn').addEventListener('click', startRound);
@@ -1085,6 +1131,8 @@ document.getElementById('submitAddBtn').addEventListener('click', ()=>{
   addStatus.style.color = '#6E8F6B';
   addStatus.textContent = 'เพิ่มแล้ว ' + addedCount + ' คำ ลงใน ' + target.label;
 
+  saveState();
+
   // รีเฟรชรอบปัจจุบันถ้ากำลังดูอยู่ที่ deck นี้หรือ "ทั้งหมด"
   if(currentDeckKey === 'all' || currentDeckKey === target.key){
     selectDeck(currentDeckKey);
@@ -1093,6 +1141,13 @@ document.getElementById('submitAddBtn').addEventListener('click', ()=>{
 
 startRound();
 renderReviewSummary();
+
+document.getElementById('resetDataBtn').addEventListener('click', ()=>{
+  if(confirm('ล้างคำศัพท์ทั้งหมดที่คุณเพิ่มเอง (รวมสถิติทบทวน) และกลับไปเป็นชุดคำศัพท์เริ่มต้น?')){
+    try{ localStorage.removeItem(STORAGE_KEY); }catch(e){}
+    location.reload();
+  }
+});
 </script>
 </body>
 </html>
