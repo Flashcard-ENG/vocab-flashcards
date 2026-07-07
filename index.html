@@ -559,6 +559,8 @@
     <button class="add-toggle" id="addToggleBtn">+ เพิ่มคำศัพท์</button>
   </div>
 
+  <div id="syncNote" style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--ink-soft);margin:-14px 0 16px;"></div>
+
   <div class="add-panel" id="addPanel">
     <div class="add-panel-title">เพิ่มคำศัพท์ใหม่</div>
 
@@ -733,29 +735,24 @@ const deckLabels = { day1: "Day 1", day2: "Day 2" };
 // นับจำนวนครั้งที่กด "ต้องทบทวน" สะสมตลอดการใช้งาน (ไม่รีเซ็ตเมื่อเริ่มรอบใหม่)
 const reviewFreq = new Map();
 
-// ---------- บันทึกข้อมูลไว้ในเบราว์เซอร์ (localStorage) กันหายตอนรีเฟรช ----------
+// ---------- บันทึกข้อมูล ----------
+// ถ้าเปิดไฟล์นี้ผ่าน Claude (ในหน้าแชท) จะมี window.storage ให้ใช้ ซึ่งเป็น "ข้อมูลกลาง"
+// ที่ทุกคนที่เปิดไฟล์นี้ผ่าน Claude เห็นชุดเดียวกัน (sync ข้ามอุปกรณ์/คนได้)
+// ถ้าเปิดเป็นไฟล์ธรรมดาในเบราว์เซอร์ (ดับเบิลคลิกไฟล์เอง) จะไม่มี window.storage
+// ระบบจะสำรองไปใช้ localStorage แทน (บันทึกเฉพาะในเบราว์เซอร์เครื่องนั้นเครื่องเดียว)
 const STORAGE_KEY = 'vocabFlashcards_v1';
+const hasCloudStorage = (typeof window !== 'undefined' && !!window.storage);
+let syncMode = hasCloudStorage ? 'cloud' : 'local';
 
-function saveState(){
-  try{
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({
-      decks: decks,
-      deckLabels: deckLabels,
-      reviewFreq: Array.from(reviewFreq.entries())
-    }));
-  }catch(e){
-    console.warn('บันทึกข้อมูลไม่สำเร็จ:', e);
-  }
+function buildStatePayload(){
+  return JSON.stringify({
+    decks: decks,
+    deckLabels: deckLabels,
+    reviewFreq: Array.from(reviewFreq.entries())
+  });
 }
 
-function loadState(){
-  let raw;
-  try{
-    raw = localStorage.getItem(STORAGE_KEY);
-  }catch(e){
-    return;
-  }
-  if(!raw) return;
+function applyLoadedState(raw){
   try{
     const data = JSON.parse(raw);
     if(data.decks) Object.assign(decks, data.decks);
@@ -768,18 +765,40 @@ function loadState(){
   }
 }
 
+async function saveState(){
+  const payload = buildStatePayload();
+  if(hasCloudStorage){
+    try{
+      const result = await window.storage.set(STORAGE_KEY, payload, true);
+      if(result){ return; }
+    }catch(e){
+      console.warn('บันทึกข้อมูลกลางไม่สำเร็จ ใช้ localStorage แทน:', e);
+    }
+  }
+  try{ localStorage.setItem(STORAGE_KEY, payload); }catch(e){ console.warn('บันทึกข้อมูลไม่สำเร็จ:', e); }
+}
+
+async function loadState(){
+  if(hasCloudStorage){
+    try{
+      const result = await window.storage.get(STORAGE_KEY, true);
+      if(result && result.value){
+        applyLoadedState(result.value);
+        return;
+      }
+    }catch(e){
+      // ยังไม่เคยมีข้อมูล หรือเรียกไม่สำเร็จ ลองใช้ localStorage แทน
+    }
+  }
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw) applyLoadedState(raw);
+  }catch(e){}
+}
+
 function getAllCards(){
   return Object.keys(decks).reduce((acc, k) => acc.concat(decks[k]), []);
 }
-
-loadState();
-
-// สร้างแท็บและตัวเลือก deck ให้ deck เพิ่มเติมที่โหลดมาจากข้อมูลที่บันทึกไว้ (เช่น Day 3 ที่เคยเพิ่มไว้)
-Object.keys(decks).forEach(key => {
-  if(key === 'day1' || key === 'day2') return;
-  addTabForDeck(key, deckLabels[key] || key);
-  addDeckOption(key, deckLabels[key] || key);
-});
 
 let currentDeckKey = "all";
 let deck = getAllCards();
@@ -907,7 +926,7 @@ document.getElementById('knowBtn').addEventListener('click', ()=>{
   render();
 });
 
-document.getElementById('reviewBtn').addEventListener('click', ()=>{
+document.getElementById('reviewBtn').addEventListener('click', async ()=>{
   if(queue.length === 0) return;
   const c = queue.shift();
   reviewSet.add(cardKey(c));
@@ -917,7 +936,7 @@ document.getElementById('reviewBtn').addEventListener('click', ()=>{
   flipped = false;
   render();
   renderReviewSummary();
-  saveState();
+  await saveState();
 });
 
 document.getElementById('restartBtn').addEventListener('click', startRound);
@@ -1083,7 +1102,7 @@ function addSingleCard(en, th, pron, syn, targetKey, targetLabel){
   decks[targetKey].push({ en: en.trim(), th: th.trim(), pron: (pron||'').trim() || '-', syn: (syn||'').trim() || '-', deck: targetKey });
 }
 
-document.getElementById('submitAddBtn').addEventListener('click', ()=>{
+document.getElementById('submitAddBtn').addEventListener('click', async ()=>{
   const target = resolveTargetDeck();
   if(!target){
     addStatus.textContent = 'กรุณาระบุชื่อ Day ใหม่';
@@ -1131,7 +1150,7 @@ document.getElementById('submitAddBtn').addEventListener('click', ()=>{
   addStatus.style.color = '#6E8F6B';
   addStatus.textContent = 'เพิ่มแล้ว ' + addedCount + ' คำ ลงใน ' + target.label;
 
-  saveState();
+  await saveState();
 
   // รีเฟรชรอบปัจจุบันถ้ากำลังดูอยู่ที่ deck นี้หรือ "ทั้งหมด"
   if(currentDeckKey === 'all' || currentDeckKey === target.key){
@@ -1139,15 +1158,39 @@ document.getElementById('submitAddBtn').addEventListener('click', ()=>{
   }
 });
 
-startRound();
-renderReviewSummary();
-
-document.getElementById('resetDataBtn').addEventListener('click', ()=>{
+document.getElementById('resetDataBtn').addEventListener('click', async ()=>{
   if(confirm('ล้างคำศัพท์ทั้งหมดที่คุณเพิ่มเอง (รวมสถิติทบทวน) และกลับไปเป็นชุดคำศัพท์เริ่มต้น?')){
+    if(hasCloudStorage){
+      try{ await window.storage.delete(STORAGE_KEY, true); }catch(e){}
+    }
     try{ localStorage.removeItem(STORAGE_KEY); }catch(e){}
     location.reload();
   }
 });
+
+// ---------- เริ่มต้นการทำงาน: โหลดข้อมูลที่บันทึกไว้ก่อน (ถ้ามี) แล้วค่อยแสดงผล ----------
+(async function init(){
+  const syncNoteEl = document.getElementById('syncNote');
+  await loadState();
+
+  // สร้างแท็บและตัวเลือก deck ให้ deck เพิ่มเติมที่โหลดมา (เช่น Day 3 ที่เคยเพิ่มไว้)
+  Object.keys(decks).forEach(key => {
+    if(key === 'day1' || key === 'day2') return;
+    addTabForDeck(key, deckLabels[key] || key);
+    addDeckOption(key, deckLabels[key] || key);
+  });
+
+  deck = getAllCards();
+
+  if(syncNoteEl){
+    syncNoteEl.textContent = hasCloudStorage
+      ? 'ข้อมูลนี้ซิงก์กลาง — ทุกคนที่เปิดไฟล์นี้ผ่าน Claude เห็นชุดเดียวกัน'
+      : 'เปิดเป็นไฟล์แยก: บันทึกเฉพาะเบราว์เซอร์เครื่องนี้เท่านั้น';
+  }
+
+  startRound();
+  renderReviewSummary();
+})();
 </script>
 </body>
 </html>
